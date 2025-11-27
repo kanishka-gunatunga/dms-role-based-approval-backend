@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <system.webServer>
+    <!-- Laravel rewrite rules -->
+    <rewrite>
+      <rules>
+        <rule name="Laravel" stopProcessing="true">
+          <match url="^(.*)$" ignoreCase="false" />
+          <conditions>
+            <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
+            <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />
+          </conditions>
+          <action type="Rewrite" url="index.php/{R:1}" />
+        </rule>
+      </rules>
+    </rewrite>
+
+    <!-- Default document -->
+    <defaultDocument>
+      <files>
+        <add value="index.php" />
+      </files>
+    </defaultDocument>
+
+    <!-- Allow all file types + increase upload size -->
+    <security>
+      <requestFiltering>
+        <!-- 100 MB = 104857600 bytes -->
+        <requestLimits maxAllowedContentLength="104857600" />
+        <fileExtensions allowUnlisted="true" />
+      </requestFiltering>
+    </security>
+
+    <!-- Fallback MIME type for unknown extensions -->
+    <staticContent>
+      <remove fileExtension=".*" />
+      <mimeMap fileExtension=".*" mimeType="application/octet-stream" />
+    </staticContent>
+  </system.webServer>
+
+  <!-- Needed for classic ASP.NET handlers still used by IIS -->
+  <system.web>
+    <!-- Size is in KB: 102400 KB = 100 MB -->
+    <httpRuntime maxRequestLength="102400" executionTimeout="600" />
+  </system.web>
+</configuration>
