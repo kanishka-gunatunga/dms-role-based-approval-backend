@@ -225,34 +225,13 @@ class DocumentAPIController extends Controller
                 $document->category = $request->category;
                 $document->description = $request->description;
                 $document->meta_tags = $request->meta_tags;
-
-                $oldApprovers = is_string($document->approver_ids)
-                    ? json_decode($document->approver_ids, true)
-                    : ($document->approver_ids ?? []);
                 $category = Categories::find($request->category);
-                $newApprovers = is_string($category->approver_ids)
-                    ? json_decode($category->approver_ids, true)
-                    : ($category->approver_ids ?? []);
-                if ($document->category == $request->category) {
+                $approvers = $category->approver_ids ? json_decode($category->approver_ids, true) : [];
 
-                    foreach ($newApprovers as $key => $item) {
-                        foreach ($oldApprovers as $oldItem) {
-
-                            if ($oldItem['id'] == $item['id']) {
-                                $newApprovers[$key]['is_accepted'] = $oldItem['is_accepted'];
-                            }
-                        }
-                    }
-                } else {
-
-                    // category changed → reset all
-                    foreach ($newApprovers as $key => $item) {
-                        $newApprovers[$key]['is_accepted'] = 0;
-                    }
+                foreach ($approvers as $key => $item) {
+                    $approvers[$key]['is_accepted'] = 0;
                 }
-
-
-                $document->approver_ids = json_encode($newApprovers);
+                $document->approver_ids = json_encode($approvers);
                 info('Approver IDs edit: ' . $document->approver_ids);
 
                 $document->update();
@@ -781,7 +760,7 @@ class DocumentAPIController extends Controller
         }
     }
 
-   
+
 
     public function document_share($id, Request $request)
     {
