@@ -195,14 +195,72 @@ class DocumentAPIController extends Controller
 
 
         try {
+            // if ($request->isMethod('get')) {
+            //     $document =  Documents::where('id', $id)->select('id', 'name', 'category', 'description', 'meta_tags')
+            //         ->with(['category' => function ($query) {
+            //             $query->select('id', 'category_name', 'approver_ids');
+            //         }])
+            //         ->get();
+
+            //     info('document: ' . json_encode($document));
+
+
+
+            //     return response()->json($document);
+            // }
+
+
+
+
             if ($request->isMethod('get')) {
-                $document =  Documents::where('id', $id)->select('id', 'name', 'category', 'description', 'meta_tags')
+
+                $document = Documents::where('id', $id)
+                    ->select('id', 'name', 'category', 'description', 'meta_tags', 'approver_ids')
                     ->with(['category' => function ($query) {
                         $query->select('id', 'category_name');
                     }])
-                    ->get();
+                    ->first();
+
+                info('document: ' . json_encode($document));
+
+                // Read approver_ids JSON
+                $approverJson = $document->approver_ids;
+                info('approverJson: ' . $approverJson);
+
+                // If no approvers found
+                if (!$approverJson) {
+                    $document->all_approvers_accepted = false;
+                    return response()->json($document);
+                }
+
+                // Convert JSON into array
+                $approvers = json_decode($approverJson, true);
+
+                // If JSON is not valid
+                if (!is_array($approvers)) {
+                    $document->all_approvers_accepted = false;
+                    return response()->json($document);
+                }
+
+                // Check whether all "is_accepted" values are 1
+                $allAccepted = true;
+
+                foreach ($approvers as $item) {
+                    if (!isset($item['is_accepted']) || $item['is_accepted'] != 1) {
+                        $allAccepted = false;
+                        break;
+                    }
+                }
+
+                $document->all_approvers_accepted = $allAccepted;
+
+                info('all_approvers_accepted: ' . ($allAccepted ? 'true' : 'false'));
+
                 return response()->json($document);
             }
+
+
+
             if ($request->isMethod('post')) {
 
                 $validator = Validator::make($request->all(), [
