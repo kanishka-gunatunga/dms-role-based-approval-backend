@@ -609,7 +609,14 @@ public function excel_bulk_upload(Request $request)
                         }
                         $document->attributes = !empty($attributeData) ? json_encode($attributeData) : null;
                         $document->indexed_or_encrypted = 'no';
-                         $document->is_approved = $is_approved;
+                         $document->is_approved = 0;
+                         $category = Categories::find($request->category);
+                        $approvers = $category->approver_ids ? json_decode($category->approver_ids, true) : [];
+
+                        foreach ($approvers as $key => $item) {
+                            $approvers[$key]['is_accepted'] = 0;
+                        }
+                        $document->approver_ids = json_encode($approvers);
                         $document->save();
 
                         $date_time = Carbon::now()->format('Y-m-d H:i:s');
@@ -782,7 +789,15 @@ public function excel_bulk_upload(Request $request)
     
                     $document->attributes = !empty($attributeData) ? json_encode($attributeData) : null;
                     $document->indexed_or_encrypted = 'no';
-                     $document->is_approved = $is_approved;
+                    // $document->is_approved = $is_approved;
+                    $document->is_approved = 0; // all documents need approval
+                    $category = Categories::find($request->category);
+                    $approvers = $category->approver_ids ? json_decode($category->approver_ids, true) : [];
+
+                    foreach ($approvers as $key => $item) {
+                        $approvers[$key]['is_accepted'] = 0;
+                    }
+                    $document->approver_ids = json_encode($approvers);
                     $document->save();
     
                     $date_time = Carbon::now()->format('Y-m-d H:i:s');
@@ -921,6 +936,7 @@ public function excel_bulk_upload_confirm(Request $request)
 
 public function save_bulk_document_excel($id,Request $request)
 {
+   
 
     try {
         if($request->isMethod('get')){

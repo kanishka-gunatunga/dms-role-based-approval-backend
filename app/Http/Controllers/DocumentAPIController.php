@@ -121,7 +121,8 @@ class DocumentAPIController extends Controller
             $document->attributes = $request->attribute_data;
             $document->expiration_date = $request->expiration_date;
             $document->indexed_or_encrypted = 'yes';
-            $document->is_approved = $is_approved;
+            // $document->is_approved = $is_approved;
+            $document->is_approved = 0; // all documents need approval
 
             $category = Categories::find($request->category);
             $approvers = $category->approver_ids ? json_decode($category->approver_ids, true) : [];
@@ -333,6 +334,8 @@ class DocumentAPIController extends Controller
                         $query->select('id', 'category_name');
                     }])
                     ->get();
+
+                info('total documents: ' . $documents->count());
 
                 // Get all relevant audit records at once
                 $auditData = DocumentAuditTrial::whereIn('changed_source', $documents->pluck('id'))
